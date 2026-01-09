@@ -1,0 +1,1 @@
+fn(good_lp::variable::UnsolvedProblem) -> good_lp::solvers::coin_cbc::CoinCbcProblem {good_lp::coin_cbc}
