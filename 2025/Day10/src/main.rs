@@ -54,13 +54,11 @@ fn combine_buttons(result: &[usize],
     None
 }
 
-// Integer Linear Programming solver using minilp
 fn solve_ilp(result: &[usize], 
             buttons: &[Vec<usize>]) -> Option<Vec<usize>> {
     let num_buttons = buttons.len();
     let num_positions = result.len();
     
-    // Create variables
     let mut vars = ProblemVariables::new();
     let button_vars: Vec<Variable> = (0..num_buttons)
         .map(|_| vars.add(variable().integer().min(0)))
@@ -69,7 +67,6 @@ fn solve_ilp(result: &[usize],
     // Objective: minimize total button presses
     let objective: Expression = button_vars.iter().copied().sum();
     
-    // Build problem
     let mut problem = vars.minimise(objective).using(coin_cbc);
     
     // Add constraints: for each position
@@ -83,17 +80,14 @@ fn solve_ilp(result: &[usize],
 
     }
     
-    // Solve
     let solution = problem.solve().ok()?;
     
-    // Extract integer coefficients
     let coefficients: Vec<usize> = button_vars.iter()
         .map(|&v| solution.value(v) as usize)
         .collect();
 
     println!("Coefficients: {:?}", coefficients);
     
-    // Verify solution
     for pos in 0..num_positions {
         let sum: usize = coefficients.iter()
             .enumerate()
