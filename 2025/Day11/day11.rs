@@ -3,7 +3,6 @@ use std::collections::{HashMap, HashSet, VecDeque};
 
 #[derive(Debug, Clone)]
 struct Node {
-    name: String,
     connections: Vec<String>,
 }
 
@@ -20,8 +19,7 @@ impl Graph {
     }
     
     fn add_node(&mut self, name: String, connections: Vec<String>) {
-        self.nodes.insert(name.clone(), Node { 
-            name, 
+        self.nodes.insert(name.clone(), Node {
             connections,
         });
     }
@@ -62,123 +60,56 @@ impl Graph {
         all_paths
     }
 
-    fn find_paths_from_start_dfs(&self, start: &str) -> HashSet<Vec<String>> {
-        let mut all_paths = HashSet::new();
-        let mut stack = Vec::new();
-        
-        // Track (path, visited_set) to avoid O(n) contains checks
-        let mut initial_visited = HashSet::new();
-        initial_visited.insert(start.to_string());
-        stack.push((vec![start.to_string()], initial_visited));
-        
-        while let Some((path, visited)) = stack.pop() {
-            let current = path.last().unwrap();
-            
-            if current == "out" {
-                let has_dac = path.iter().any(|n| n == "dac");
-                let has_fft = path.iter().any(|n| n == "fft");
-                
-                if has_dac && has_fft {
-                    all_paths.insert(path.clone());
-                }
-                continue;
-            }
-            
-            if let Some(connections) = self.get_connections(current) {
-                for conn in connections {
-                    // O(1) cycle detection with HashSet
-                    if !visited.contains(conn) {
-                        let mut new_path = path.clone();
-                        new_path.push(conn.clone());
-                        
-                        let mut new_visited = visited.clone();
-                        new_visited.insert(conn.clone());
-                        
-                        stack.push((new_path, new_visited));
-                    }
-                }
-            }
-        }
-        all_paths
-    }
+    fn dfs_memo(
+        &self,
+        u: String,
+        target: &str,
+        req1: &str,
+        req2: &str,
+        mut f1: bool,
+        mut f2: bool,
+        visited: &mut HashSet<String>,
+        memo: &mut HashMap<(String, bool, bool), usize>
+    ) -> usize {
+        if u == req1 { f1 = true; }
+        if u == req2 { f2 = true; }
 
-    fn count_paths_dfs(&self, start: &str) -> usize {
-        // Count paths through dac first, then fft
-        let count1 = self.count_segment_paths(start, "dac") 
-            * self.count_segment_paths("dac", "fft")
-            * self.count_segment_paths("fft", "out");
-        
-        // Count paths through fft first, then dac
-        let count2 = self.count_segment_paths(start, "fft")
-            * self.count_segment_paths("fft", "dac")
-            * self.count_segment_paths("dac", "out");
-        
-        count1 + count2
-    }
-
-    fn count_segment_paths(&self, start: &str, end: &str) -> usize {
-        let mut memo: HashMap<String, usize> = HashMap::new();
-        self.count_paths_memo(start, end, &mut HashSet::new(), &mut memo)
-    }
-
-    fn count_paths_memo(&self, current: &str, target: &str, visited: &mut HashSet<String>, memo: &mut HashMap<String, usize>) -> usize {
-        if current == target {
-            return 1;
+        if u == target {
+            return if f1 && f2 { 1 } else { 0 };
         }
 
-        // Check memo (only valid if this node isn't in current path)
-        if !visited.contains(current) {
-            if let Some(&cached) = memo.get(current) {
-                return cached;
-            }
+        // Check cache
+        let state = (u.clone(), f1, f2);
+        if let Some(&count) = memo.get(&state) {
+            return count;
         }
 
-        if visited.contains(current) {
-            return 0;
-        }
+        visited.insert(u.clone());
+        let mut total_paths = 0;
 
-        visited.insert(current.to_string());
-        
-        let mut total = 0;
-        if let Some(connections) = self.get_connections(current) {
-            for conn in connections {
-                total += self.count_paths_memo(conn, target, visited, memo);
-            }
-        }
-
-        visited.remove(current);
-        
-        // Only memoize if we can reach this state again without visiting current
-        if total > 0 {
-            memo.insert(current.to_string(), total);
-        }
-        
-        total
-    }
-
-    fn dfs_count(&self, current: &str, visited: &mut HashSet<String>, has_dac: bool, has_fft: bool, count: &mut usize) {
-        if current == "out" {
-            if has_dac && has_fft {
-                *count += 1;
-            }
-            return;
-        }
-
-        visited.insert(current.to_string());
-
-        let new_has_dac = has_dac || current == "dac";
-        let new_has_fft = has_fft || current == "fft";
-
-        if let Some(connections) = self.get_connections(current) {
-            for conn in connections {
-                if !visited.contains(conn) {
-                    self.dfs_count(conn, visited, new_has_dac, new_has_fft, count);
+        if let Some(node_data) = self.nodes.get(&u) {
+            for neighbor in &node_data.connections {
+                if !visited.contains(neighbor) {
+                    total_paths += self.dfs_memo(
+                        neighbor.clone(),
+                        target,
+                        req1,
+                        req2,
+                        f1,
+                        f2,
+                        visited,
+                        memo
+                    );
                 }
             }
         }
 
-        visited.remove(current);
+        visited.remove(&u);
+        
+        memo.insert(state, total_paths);
+        total_paths
     }
+    
 }
 
 fn _part1(input: &str) {
@@ -228,15 +159,20 @@ fn _part1(input: &str) {
         graph.add_node(node_name, connections);
     }
 
-    let count = graph.count_paths_dfs("svr");
+    let mut memo: HashMap<(String, bool, bool), usize> = HashMap::new();
+    let mut visited_in_current_path = HashSet::new();
 
-    println!("Result for part2: {}", count);
+    let count_paths = graph.dfs_memo("svr".to_string(), "out", "fft", "dac",
+                                        false, false, &mut visited_in_current_path,
+                                        &mut memo);
+
+    println!("Result for part2: {}", count_paths);
 }
 
 fn main() {
     let _input_file = "input.txt";
     // let _input_file = "input_test.txt";
     // let _input_file = "input_test_2.txt";
-    // _part1(_input_file);
+    _part1(_input_file);
     part2(_input_file);
 }
