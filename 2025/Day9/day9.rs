@@ -28,7 +28,6 @@ fn _part1(input: &str) {
     
     let n = positions.len();
     let mut area = 0;
-    let mut result = (0, 0);
 
     for i in 0..n {
         for j in (i+1)..n {
@@ -36,16 +35,11 @@ fn _part1(input: &str) {
 
             if aux > area && i != j {
                 area = aux;
-                result = (i, j);
             }
         }
     }
 
-    println!("\nMax area is {} between point ({}, {}) and ({}, {})", 
-             area, 
-             positions[result.0].x, positions[result.0].y,
-             positions[result.1].x, positions[result.1].y);
-    
+    println!("\nMax area Part 1 {} ", area);    
 }
 
 fn part2(input: &str) {
@@ -82,8 +76,6 @@ fn part2(input: &str) {
     edges.sort_by_key(|edge| (-edge[0].x, -edge[1].x));
     sizes.sort_by_key(|&(size, _, _)| -size);
 
-    println!("Sizes: {:?}", sizes);
-    
     for (size, c1, c2) in &sizes {
         let (x1, y1) = (c1.x, c1.y);
         let (x2, y2) = (c2.x, c2.y);
@@ -99,7 +91,7 @@ fn part2(input: &str) {
             }
         }
         if !found {
-            println!("Found max size without infinite area: {} between ({}, {}) and ({}, {})", size, x1, y1, x2, y2);
+            println!("Part 2 solution: {}", size);
             return;
         }
     }
@@ -108,7 +100,7 @@ fn part2(input: &str) {
 
 fn main() {
     let _input_file = "input.txt";
-    let _input_file = "input_test.txt";
-    // _part1(_input_file);
+    // let _input_file = "input_test.txt";
+    _part1(_input_file);
     part2(_input_file);
 }
