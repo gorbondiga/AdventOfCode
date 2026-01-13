@@ -11,9 +11,35 @@ fn convert_string(value: &str) -> i32 {
     }
 }
 
-fn main() {
-    let input_file = "input.txt";
-    let contents = fs::read_to_string(input_file)
+fn _part1(input: &str) {
+        let contents = fs::read_to_string(input)
+        .expect("Failed to read input file");
+    let mut result: i32 = 0;
+    let mut pos: i32 = 50;
+    
+    for line in contents.lines() {
+        let rot_value = convert_string(line.trim());
+
+        let sum: i32 = pos + rot_value;        
+        
+        if sum < 0 {
+            pos = sum.rem_euclid(100);
+        } else if sum >= 100 {
+            pos = sum % 100;
+        } else {
+            pos = sum;
+        }
+        
+        if pos == 0 {
+            result += 1;
+        }
+    }
+
+    println!("Part 1 result: {}", result);
+}
+
+fn part2(input: &str) {
+    let contents = fs::read_to_string(input)
         .expect("Failed to read input file");
     let mut part_two: i32 = 0;
     let mut pos: i32 = 50;
@@ -44,6 +70,13 @@ fn main() {
             pos = sum.abs() % 100;
         }
     }
-    println!("======== Final result ========");
-    println!("Part two: {}", part_two);
+
+    println!("Part 2 result: {}", part_two);
+}
+
+fn main() {
+    let _input_file = "input.txt";
+    // let _input_file = "input_test.txt";
+    _part1(_input_file);
+    part2(_input_file);
 }
