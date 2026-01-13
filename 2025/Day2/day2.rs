@@ -1,9 +1,18 @@
 use std::fs;
 
-fn is_repeated(s: &str) -> bool {
+fn is_split_equal(s: &str) -> bool {
+    let len = s.len();
+    if len % 2 != 0 {
+        return false;
+    }
+    let mid = len / 2;
+    return s[0..mid] == s[mid..len];
+}
+
+fn _is_repeated(s: &str) -> bool {
     let len = s.len();
     match len {
-        l if len == 2 => return s[0..1] == s[1..2],
+        _ if len == 2 => return s[0..1] == s[1..2],
         l if len % 2 == 0 => {
             if (s[0..2].repeat(l / 2) == s) ||
                (s[0..(l / 2)].repeat(2) == s) ||
@@ -18,14 +27,14 @@ fn is_repeated(s: &str) -> bool {
         l if len % 3 == 0 && len > 3 => {
             return s[0..3].repeat(l / 3) == s;
         },
-        l if len == 1 => return false,
+        _ if len == 1 => return false,
         _ => return s[0..1].repeat(len) == s,
     }
 }
 
-fn _is_repeated(s: &str) -> bool {
+fn is_repeated(s: &str) -> bool {
     // Elegant solution proposed in reddit forum,
-    // it's based on the integer log base 10 
+    // it's based on the integer log base 10
     // to get the number lenght
     let i: usize = s.parse().expect("Invalid number");
     match 1 + i.ilog10() {
@@ -43,12 +52,32 @@ fn _is_repeated(s: &str) -> bool {
     }
 }
 
-fn main() {
-    let mut result: i64 = 0;
-    let _input_file = "input.txt";
-    let contents = fs::read_to_string(_input_file)
+fn _part1(input: &str) {
+    let contents = fs::read_to_string(input)
         .expect("Failed to read input file");
+
+    let mut result: i64 = 0;
+    for range in contents.trim().split(',') { 
+        let parts: Vec<&str> = range.trim().split('-').collect();
+        let start: i64 = parts[0].parse().expect("Invalid number");
+        let end: i64 = parts[1].parse().expect("Invalid number");
+        
+        for i in start..=end {
+            let s = i.to_string();
+            if is_split_equal(&s) {
+                result += i;
+            }
+        }
+    }
     
+    println!("Part1 result is {}", result);
+}
+
+fn part2(input: &str) {
+    let contents = fs::read_to_string(input)
+        .expect("Failed to read input file");
+
+    let mut result: i64 = 0;
     for range in contents.trim().split(',') { 
         let parts: Vec<&str> = range.trim().split('-').collect();
         let start: i64 = parts[0].parse().expect("Invalid number");
@@ -61,8 +90,13 @@ fn main() {
             }
         }
     }
-    println!("======== Final result ========");
-    println!("Result: {}", result);
-    // wrong answer: 4174379265
-    // answer: 46666175279
+    
+    println!("Part2 result is {}", result);
+}
+
+fn main() {
+    let _input_file = "input.txt";
+    // let _input_file = "input_test.txt";
+    _part1(_input_file);
+    part2(_input_file);
 }
