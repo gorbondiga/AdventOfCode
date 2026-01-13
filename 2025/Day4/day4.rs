@@ -41,10 +41,33 @@ fn part_2(matrix: &mut Vec<Vec<i32>>) -> i32 {
     result
 }
 
-fn main() {
-    let _input_file = "input.txt";
-    // let _input_file = "input_test.txt";
-    let contents = fs::read_to_string(_input_file)
+fn _part1(input: &str) {
+    let contents = fs::read_to_string(input)
+                    .expect("Failed to read input file");
+    let matrix: Vec<Vec<i32>> = contents
+        .lines()
+        .map(|line| {
+            line.chars()
+                .map(|c| if c == '@' { 1 } else { 0 })
+                .collect()
+        })
+        .collect();
+    let w = matrix[0].len();
+    let h = matrix.len();
+    let mut result = 0;
+    for c in 0..w {
+        for r in 0..h {
+            let _adj = _adjacent(r as i32, c as i32, &matrix);
+            if _adj < 4 && matrix[r][c] == 1 {
+                result += 1;
+            }
+        }
+    }  
+    println!("Part1 result is {}", result);
+}
+
+fn part2(input: &str) {
+    let contents = fs::read_to_string(input)
                     .expect("Failed to read input file");
     let mut matrix: Vec<Vec<i32>> = contents
         .lines()
@@ -62,13 +85,12 @@ fn main() {
             break num_changes;
         }
     };
-    println!("Final result is {}", result);
+    println!("Part2 result is {}", result);
 }
 
-#[cfg(test)]
-mod tests {
-	#[test]
-	fn part2() {
-		assert_eq!(super::main(), 9086);
-	}
+fn main() {
+    let _input_file = "input.txt";
+    // let _input_file = "input_test.txt";
+    _part1(_input_file);
+    part2(_input_file);
 }
