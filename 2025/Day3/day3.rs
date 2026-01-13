@@ -27,13 +27,41 @@ fn _joltage(numbers: &Vec<i64>) -> i64 {
     return combined;
 }
 
-fn main() {
-    let _input_file = "input.txt";
-    // let _input_file = "input_test.txt";
-    let contents = fs::read_to_string(_input_file)
+fn _part1(input: &str) {
+    let contents = fs::read_to_string(input)
                     .expect("Failed to read input file");
     
-    // Parse lines as integers into Vec<i32>
+    let digit_arrays: Vec<Vec<i64>> = contents
+        .lines()
+        .map(|line| {
+            line.trim()
+                .chars()
+                .map(|c| c.to_digit(10).unwrap() as i64)
+                .collect()
+        })
+        .collect();
+
+    let n = digit_arrays.len();
+    let mut result: i64 = 0;
+    for i in 0..n {
+        let m = digit_arrays[i].len();
+        let max_val = *digit_arrays[i][0..m-1].iter().max().unwrap();
+        let max_idx = digit_arrays[i][0..m-1]
+                        .iter()
+                        .position(|&x| x == max_val)
+                        .unwrap();
+        let array_second_max = digit_arrays[i][max_idx+1..m].iter().max().unwrap();
+        let combined_number = max_val * 10 + array_second_max;
+        result += combined_number;
+    }
+    
+    println!("Part1 result is {}", result);
+}
+
+fn part2(input: &str) {
+    let contents = fs::read_to_string(input)
+                    .expect("Failed to read input file");
+    
     let digit_arrays: Vec<Vec<i64>> = contents
         .lines()
         .map(|line| {
@@ -49,5 +77,13 @@ fn main() {
         let x = _joltage(d);
         result += x;
     }
-    println!("Final result is {}", result);
+
+    println!("Part2 result is {}", result);
+}
+
+fn main() {
+    let _input_file = "input.txt";
+    // let _input_file = "input_test.txt";
+    _part1(_input_file);
+    part2(_input_file);
 }
